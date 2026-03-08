@@ -16,6 +16,8 @@ let reconnectTimer = null;
 let timelineChart = null;
 let protocolChart = null;
 let topTalkersChart = null;
+let portsChart = null;
+let portProtocolChart = null;
 let leafletMap = null;
 let mapMarkers = [];
 
@@ -56,6 +58,26 @@ function formatNumber(n) {
 function timeLabel(ts) {
   const d = new Date(ts * 1000); // Python time.time() is in seconds
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function formatTimestamp(ts) {
+  if (!ts) return '--';
+  return new Date(ts * 1000).toLocaleString();
+}
+
+const WELL_KNOWN_PORTS = {
+  20:'FTP-Data',21:'FTP',22:'SSH',23:'Telnet',25:'SMTP',53:'DNS',67:'DHCP',68:'DHCP',
+  80:'HTTP',110:'POP3',119:'NNTP',123:'NTP',135:'RPC',137:'NetBIOS',138:'NetBIOS',
+  139:'NetBIOS',143:'IMAP',161:'SNMP',162:'SNMP',389:'LDAP',443:'HTTPS',445:'SMB',
+  465:'SMTPS',514:'Syslog',587:'SMTP',636:'LDAPS',993:'IMAPS',995:'POP3S',
+  1080:'SOCKS',1433:'MSSQL',1434:'MSSQL',1723:'PPTP',3306:'MySQL',3389:'RDP',
+  5060:'SIP',5061:'SIP-TLS',5432:'PostgreSQL',5900:'VNC',6379:'Redis',
+  8080:'HTTP-Alt',8443:'HTTPS-Alt',8888:'HTTP-Alt',9090:'Prometheus',
+  27017:'MongoDB',5672:'AMQP',15672:'RabbitMQ',11211:'Memcached',
+};
+
+function getPortService(port) {
+  return WELL_KNOWN_PORTS[port] || (port < 1024 ? 'System' : 'App');
 }
 
 // ---------------------------------------------------------------------------
@@ -362,6 +384,127 @@ function updateTopTalkers(topIps) {
 }
 
 // ---------------------------------------------------------------------------
+// Ports Chart (Horizontal Bar)
+// ---------------------------------------------------------------------------
+
+function initPortsChart() {
+  const ctx = document.getElementById('ports-chart').getContext('2d');
+  portsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Traffic',
+        data: [],
+        backgroundColor: 'rgba(168, 85, 247, 0.7)',
+        borderColor: '#a855f7',
+        borderWidth: 1,
+        borderRadius: 3,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const label = items[0]?.label || '';
+              return label;
+            },
+            label: (ctx) => `Traffic: ${formatBytes(ctx.parsed.x)}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: chartColors.grid },
+          ticks: { callback: (v) => formatBytes(v), maxTicksLimit: 5 },
+        },
+        y: {
+          grid: { display: false },
+          ticks: { font: { size: 11 } },
+        },
+      },
+    },
+  });
+}
+
+function initPortProtocolChart() {
+  const ctx = document.getElementById('port-protocol-chart').getContext('2d');
+  portProtocolChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: [],
+      datasets: [{
+        data: [],
+        backgroundColor: [],
+        borderColor: '#12122a',
+        borderWidth: 3,
+        hoverOffset: 8,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { usePointStyle: true, padding: 12, boxWidth: 10 },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = total ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+              return `${ctx.label}: ${formatBytes(ctx.parsed)} (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+const portBarColors = [
+  '#a855f7','#8b5cf6','#7c3aed','#6d28d9','#5b21b6',
+  '#c084fc','#d8b4fe','#e9d5ff','#9333ea','#7e22ce',
+  '#6366f1','#818cf8','#a5b4fc','#4f46e5','#4338ca',
+];
+
+function updatePorts(ports) {
+  if (!portsChart || !ports || ports.length === 0) return;
+  const labels = ports.map(p => `${p.port} (${getPortService(p.port)})`);
+  const data = ports.map(p => p.bytes);
+
+  portsChart.data.labels = labels;
+  portsChart.data.datasets[0].data = data;
+  portsChart.data.datasets[0].backgroundColor = ports.map((_, i) => portBarColors[i % portBarColors.length]);
+  portsChart.update('none');
+
+  // Aggregate by protocol for the port-protocol doughnut
+  if (!portProtocolChart) return;
+  const protoAgg = {};
+  ports.forEach(p => {
+    const proto = p.protocol || 'Other';
+    protoAgg[proto] = (protoAgg[proto] || 0) + p.bytes;
+  });
+  const protoLabels = Object.keys(protoAgg);
+  const protoData = Object.values(protoAgg);
+  const protoColors = protoLabels.map(getProtocolColor);
+
+  portProtocolChart.data.labels = protoLabels;
+  portProtocolChart.data.datasets[0].data = protoData;
+  portProtocolChart.data.datasets[0].backgroundColor = protoColors;
+  portProtocolChart.update('none');
+}
+
+// ---------------------------------------------------------------------------
 // World Map (Leaflet)
 // ---------------------------------------------------------------------------
 
@@ -469,7 +612,7 @@ function renderTable() {
 
   dom.ipTableBody.innerHTML = sorted.map(ip => {
     const geo = ip.geo || {};
-    return `<tr>
+    return `<tr class="ip-row" data-ip="${escapeHtml(ip.ip)}">
       <td class="cell-ip">${escapeHtml(ip.ip)}</td>
       <td>${formatBytes(ip.bytes_sent)}</td>
       <td>${formatBytes(ip.bytes_received)}</td>
@@ -480,6 +623,11 @@ function renderTable() {
       <td>${escapeHtml(geo.isp || '--')}</td>
     </tr>`;
   }).join('');
+
+  // Attach click handlers for IP detail modal
+  dom.ipTableBody.querySelectorAll('.ip-row').forEach(row => {
+    row.addEventListener('click', () => openIpModal(row.dataset.ip));
+  });
 }
 
 function getNestedVal(obj, key) {
@@ -514,6 +662,92 @@ document.querySelectorAll('#ip-table th[data-sort]').forEach(th => {
 });
 
 // ---------------------------------------------------------------------------
+// IP Details Modal
+// ---------------------------------------------------------------------------
+
+const modal = document.getElementById('ip-modal');
+const modalCloseBtn = document.getElementById('modal-close-btn');
+const modalBackdrop = modal ? modal.querySelector('.modal-backdrop') : null;
+
+function openIpModal(ip) {
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  document.getElementById('modal-ip-title').textContent = ip;
+
+  // Clear previous data
+  ['modal-bytes-sent','modal-bytes-recv','modal-pkts-sent','modal-pkts-recv',
+   'modal-first-seen','modal-last-seen','modal-country','modal-city',
+   'modal-isp','modal-org','modal-asn','modal-coords'].forEach(id => {
+    document.getElementById(id).textContent = 'Loading...';
+  });
+  document.getElementById('modal-protocols').innerHTML = '';
+  document.getElementById('modal-ports-body').innerHTML = '<tr><td colspan="5" class="table-empty">Loading...</td></tr>';
+
+  // Fetch detailed data
+  fetchJSON(`/api/ips/${ip}/details`).then(data => {
+    if (!data) return;
+    document.getElementById('modal-bytes-sent').textContent = formatBytes(data.bytes_sent);
+    document.getElementById('modal-bytes-recv').textContent = formatBytes(data.bytes_received);
+    document.getElementById('modal-pkts-sent').textContent = formatNumber(data.packets_sent);
+    document.getElementById('modal-pkts-recv').textContent = formatNumber(data.packets_received);
+    document.getElementById('modal-first-seen').textContent = formatTimestamp(data.first_seen);
+    document.getElementById('modal-last-seen').textContent = formatTimestamp(data.last_seen);
+
+    const geo = data.geo || {};
+    document.getElementById('modal-country').textContent = geo.country || '--';
+    document.getElementById('modal-city').textContent = geo.city || '--';
+    document.getElementById('modal-isp').textContent = geo.isp || '--';
+    document.getElementById('modal-org').textContent = geo.org || '--';
+    document.getElementById('modal-asn').textContent = geo.as || '--';
+    document.getElementById('modal-coords').textContent =
+      (geo.lat && geo.lon) ? `${geo.lat}, ${geo.lon}` : '--';
+
+    // Protocol bars
+    const protoEl = document.getElementById('modal-protocols');
+    if (data.protocols && Object.keys(data.protocols).length > 0) {
+      const maxVal = Math.max(...Object.values(data.protocols));
+      protoEl.innerHTML = Object.entries(data.protocols).map(([proto, bytes]) => {
+        const pct = maxVal > 0 ? (bytes / maxVal * 100) : 0;
+        const color = getProtocolColor(proto);
+        return `<div class="proto-bar-row">
+          <span class="proto-bar-label">${escapeHtml(proto)}</span>
+          <div class="proto-bar-track"><div class="proto-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+          <span class="proto-bar-value">${formatBytes(bytes)}</span>
+        </div>`;
+      }).join('');
+    } else {
+      protoEl.innerHTML = '<div class="table-empty">No protocol data</div>';
+    }
+
+    // Ports table
+    const portsBody = document.getElementById('modal-ports-body');
+    if (data.ports && data.ports.length > 0) {
+      portsBody.innerHTML = data.ports.map(p =>
+        `<tr>
+          <td class="cell-ip">${p.port}</td>
+          <td>${escapeHtml(getPortService(p.port))}</td>
+          <td>${escapeHtml(p.protocol || '--')}</td>
+          <td>${formatBytes(p.bytes)}</td>
+          <td>${formatNumber(p.packets)}</td>
+        </tr>`
+      ).join('');
+    } else {
+      portsBody.innerHTML = '<tr><td colspan="5" class="table-empty">No port data</td></tr>';
+    }
+  });
+}
+
+function closeIpModal() {
+  if (modal) modal.classList.add('hidden');
+}
+
+if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeIpModal);
+if (modalBackdrop) modalBackdrop.addEventListener('click', closeIpModal);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeIpModal();
+});
+
+// ---------------------------------------------------------------------------
 // REST API Fetching
 // ---------------------------------------------------------------------------
 
@@ -529,12 +763,13 @@ async function fetchJSON(endpoint) {
 }
 
 async function initialLoad() {
-  const [summary, ips, topIps, protocols, timeline] = await Promise.all([
+  const [summary, ips, topIps, protocols, timeline, ports] = await Promise.all([
     fetchJSON('/api/summary'),
     fetchJSON('/api/ips'),
     fetchJSON('/api/top?limit=10'),
     fetchJSON('/api/protocols'),
     fetchJSON('/api/timeline'),
+    fetchJSON('/api/ports?limit=15'),
   ]);
 
   if (summary) {
@@ -548,6 +783,7 @@ async function initialLoad() {
   if (topIps) updateTopTalkers(topIps);
   if (protocols) updateProtocols(protocols);
   if (timeline) loadFullTimeline(timeline);
+  if (ports) updatePorts(ports);
 }
 
 // ---------------------------------------------------------------------------
@@ -603,6 +839,7 @@ function handleWSUpdate(msg) {
   if (msg.summary) updateSummary(msg.summary);
   if (msg.top_ips) updateTopTalkers(msg.top_ips);
   if (msg.protocols) updateProtocols(msg.protocols);
+  if (msg.ports) updatePorts(msg.ports);
   if (msg.timeline_point) updateTimeline(msg.timeline_point);
 
   // Update the last-update timestamp
@@ -633,6 +870,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initTimelineChart();
   initProtocolChart();
   initTopTalkersChart();
+  initPortsChart();
+  initPortProtocolChart();
   initMap();
 
   // Attempt initial data load, then connect WebSocket

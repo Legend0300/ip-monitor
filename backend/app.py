@@ -59,6 +59,14 @@ async def get_ip(ip: str):
     return result
 
 
+@app.get("/api/ips/{ip}/details")
+async def get_ip_details(ip: str):
+    result = store.get_ip_details(ip)
+    if result is None:
+        raise HTTPException(status_code=404, detail="IP not found")
+    return result
+
+
 @app.get("/api/top")
 async def get_top(limit: int = Query(default=10, ge=1, le=100)):
     return store.get_top(limit)
@@ -72,6 +80,11 @@ async def get_protocols():
 @app.get("/api/timeline")
 async def get_timeline():
     return store.get_timeline()
+
+
+@app.get("/api/ports")
+async def get_ports(limit: int = Query(default=20, ge=1, le=100)):
+    return store.get_ports(limit)
 
 
 # ── WebSocket ───────────────────────────────────────────────────
@@ -92,6 +105,7 @@ async def websocket_endpoint(ws: WebSocket):
                 "summary": store.get_summary(),
                 "top_ips": store.get_top(10),
                 "protocols": store.get_protocols(),
+                "ports": store.get_ports(15),
                 "timeline_point": latest_point,
             }
             await ws.send_json(payload)

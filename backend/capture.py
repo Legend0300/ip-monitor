@@ -86,7 +86,17 @@ def _packet_callback(packet, store, local_ips):
     length = len(packet)
     protocol = _get_protocol_name(packet)
 
-    store.update(src, dst, length, protocol, local_ips)
+    # Extract ports from TCP/UDP layers
+    src_port = None
+    dst_port = None
+    if packet.haslayer(TCP):
+        src_port = packet[TCP].sport
+        dst_port = packet[TCP].dport
+    elif packet.haslayer(UDP):
+        src_port = packet[UDP].sport
+        dst_port = packet[UDP].dport
+
+    store.update(src, dst, length, protocol, local_ips, src_port, dst_port)
 
 
 def _timeline_flusher(store, stop_event):

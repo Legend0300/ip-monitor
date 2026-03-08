@@ -104,6 +104,27 @@
     </div>
   </section>
 
+  <!-- Charts Row 3: Ports -->
+  <section class="charts-grid">
+    <div class="card chart-card">
+      <div class="card-header">
+        <h3>Top Ports</h3>
+        <span class="card-badge">By Traffic</span>
+      </div>
+      <div class="chart-container chart-container-tall">
+        <canvas id="ports-chart"></canvas>
+      </div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-header">
+        <h3>Port Protocols</h3>
+      </div>
+      <div class="chart-container chart-container-doughnut">
+        <canvas id="port-protocol-chart"></canvas>
+      </div>
+    </div>
+  </section>
+
   <!-- IP Table -->
   <section class="card table-card">
     <div class="card-header">
@@ -132,6 +153,69 @@
       </table>
     </div>
   </section>
+
+  <!-- IP Details Modal -->
+  <div id="ip-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 id="modal-ip-title">--</h2>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Geo & Overview Row -->
+        <div class="modal-grid">
+          <div class="modal-section">
+            <h4>Traffic Overview</h4>
+            <div class="modal-stats">
+              <div class="modal-stat"><span class="modal-stat-label">Bytes Sent</span><span class="modal-stat-value" id="modal-bytes-sent">--</span></div>
+              <div class="modal-stat"><span class="modal-stat-label">Bytes Received</span><span class="modal-stat-value" id="modal-bytes-recv">--</span></div>
+              <div class="modal-stat"><span class="modal-stat-label">Packets Sent</span><span class="modal-stat-value" id="modal-pkts-sent">--</span></div>
+              <div class="modal-stat"><span class="modal-stat-label">Packets Received</span><span class="modal-stat-value" id="modal-pkts-recv">--</span></div>
+              <div class="modal-stat"><span class="modal-stat-label">First Seen</span><span class="modal-stat-value" id="modal-first-seen">--</span></div>
+              <div class="modal-stat"><span class="modal-stat-label">Last Seen</span><span class="modal-stat-value" id="modal-last-seen">--</span></div>
+            </div>
+          </div>
+          <div class="modal-section">
+            <h4>Geolocation</h4>
+            <div class="modal-stats">
+              <div class="modal-stat"><span class="modal-stat-label">Country</span><span class="modal-stat-value" id="modal-country">--</span></div>
+              <div class="modal-stat"><span class="modal-stat-label">City</span><span class="modal-stat-value" id="modal-city">--</span></div>
+              <div class="modal-stat"><span class="modal-stat-label">ISP</span><span class="modal-stat-value" id="modal-isp">--</span></div>
+              <div class="modal-stat"><span class="modal-stat-label">Organization</span><span class="modal-stat-value" id="modal-org">--</span></div>
+              <div class="modal-stat"><span class="modal-stat-label">ASN</span><span class="modal-stat-value" id="modal-asn">--</span></div>
+              <div class="modal-stat"><span class="modal-stat-label">Coordinates</span><span class="modal-stat-value" id="modal-coords">--</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Protocols for this IP -->
+        <div class="modal-section">
+          <h4>Protocols</h4>
+          <div class="modal-protocol-bars" id="modal-protocols"></div>
+        </div>
+        <!-- Ports Table -->
+        <div class="modal-section">
+          <h4>Ports</h4>
+          <div class="modal-table-wrapper">
+            <table class="modal-table" id="modal-ports-table">
+              <thead>
+                <tr>
+                  <th>Port</th>
+                  <th>Service</th>
+                  <th>Protocol</th>
+                  <th>Bytes</th>
+                  <th>Packets</th>
+                </tr>
+              </thead>
+              <tbody id="modal-ports-body">
+                <tr><td colspan="5" class="table-empty">No port data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Footer -->
   <footer class="footer">

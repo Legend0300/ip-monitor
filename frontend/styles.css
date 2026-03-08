@@ -549,7 +549,236 @@ body {
   animation-delay: 0.05s;
 }
 
+.chart-container-tall {
+  height: 320px;
+  padding: 12px 16px 8px;
+}
+
+/* Clickable table rows */
+.ip-row {
+  cursor: pointer;
+}
+
 /* Chart.js canvas reset */
 canvas {
   display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   IP Details Modal
+   --------------------------------------------------------------------------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.modal-dialog {
+  position: relative;
+  width: 90%;
+  max-width: 780px;
+  max-height: 85vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6), var(--glow-cyan);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-card);
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.modal-close:hover {
+  color: var(--accent-red);
+}
+
+.modal-body {
+  padding: 16px 20px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.modal-section {
+  margin-bottom: 16px;
+}
+
+.modal-section h4 {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-card);
+}
+
+.modal-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.modal-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.modal-stat-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+/* Protocol bars in modal */
+.proto-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.proto-bar-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 50px;
+}
+
+.proto-bar-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.proto-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.proto-bar-value {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  min-width: 70px;
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+/* Modal ports table */
+.modal-table-wrapper {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+}
+
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.modal-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.modal-table th {
+  background: #0e0e24;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.6px;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 2px solid var(--border-card);
+}
+
+.modal-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-card);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.modal-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.modal-table tbody tr:hover {
+  background: rgba(168, 85, 247, 0.06);
+}
+
+@media (max-width: 700px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal-dialog {
+    width: 95%;
+    max-height: 90vh;
+  }
 }
