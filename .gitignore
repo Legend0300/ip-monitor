@@ -1,0 +1,12 @@
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+dist/
+build/
+*.egg-info/
+.env
+.venv/
+venv/
+package-lock.json
+*.log

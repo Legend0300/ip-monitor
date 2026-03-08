@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src http://localhost:8420 ws://localhost:8420; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com;">
+  <title>IP Monitor</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Connection overlay -->
+  <div id="connection-overlay" class="overlay">
+    <div class="overlay-content">
+      <div class="spinner"></div>
+      <h2>Connecting to backend...</h2>
+      <p>Waiting for the monitoring engine at localhost:8420</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-title">
+      <h1>IP MONITOR</h1>
+      <span class="header-subtitle">Network Traffic Analysis</span>
+    </div>
+    <div class="header-status">
+      <span id="connection-label">Disconnected</span>
+      <span id="status-indicator" class="status-dot disconnected"></span>
+    </div>
+  </header>
+
+  <!-- Summary Cards -->
+  <section class="summary-row">
+    <div class="summary-card">
+      <div class="summary-value" id="total-in">--</div>
+      <div class="summary-label">Total In</div>
+      <div class="summary-icon icon-download"></div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-value" id="total-out">--</div>
+      <div class="summary-label">Total Out</div>
+      <div class="summary-icon icon-upload"></div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-value" id="active-ips">--</div>
+      <div class="summary-label">Active IPs</div>
+      <div class="summary-icon icon-network"></div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-value" id="total-packets">--</div>
+      <div class="summary-label">Packets</div>
+      <div class="summary-icon icon-packets"></div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-value" id="uptime">--</div>
+      <div class="summary-label">Uptime</div>
+      <div class="summary-icon icon-clock"></div>
+    </div>
+  </section>
+
+  <!-- Charts Row 1 -->
+  <section class="charts-grid">
+    <div class="card chart-card">
+      <div class="card-header">
+        <h3>Bandwidth Timeline</h3>
+        <span class="card-badge">Live</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="timeline-chart"></canvas>
+      </div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-header">
+        <h3>Protocol Breakdown</h3>
+      </div>
+      <div class="chart-container chart-container-doughnut">
+        <canvas id="protocol-chart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Charts Row 2 -->
+  <section class="charts-grid">
+    <div class="card chart-card">
+      <div class="card-header">
+        <h3>Top Talkers</h3>
+        <span class="card-badge">Top 10</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="top-talkers-chart"></canvas>
+      </div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-header">
+        <h3>World Map</h3>
+      </div>
+      <div id="world-map" class="map-container"></div>
+    </div>
+  </section>
+
+  <!-- IP Table -->
+  <section class="card table-card">
+    <div class="card-header">
+      <h3>Active Connections</h3>
+      <span class="card-badge" id="ip-count">0 IPs</span>
+    </div>
+    <div class="table-wrapper">
+      <table id="ip-table">
+        <thead>
+          <tr>
+            <th data-sort="ip">IP <span class="sort-arrow"></span></th>
+            <th data-sort="bytes_sent">Bytes Sent <span class="sort-arrow"></span></th>
+            <th data-sort="bytes_received">Bytes Recv <span class="sort-arrow"></span></th>
+            <th data-sort="packets_sent">Pkts Sent <span class="sort-arrow"></span></th>
+            <th data-sort="packets_received">Pkts Recv <span class="sort-arrow"></span></th>
+            <th data-sort="country">Country <span class="sort-arrow"></span></th>
+            <th data-sort="city">City <span class="sort-arrow"></span></th>
+            <th data-sort="isp">ISP <span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="ip-table-body">
+          <tr>
+            <td colspan="8" class="table-empty">Waiting for data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span>IP Monitor v1.0.0</span>
+    <span id="last-update">Last update: --</span>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="renderer.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,555 @@
+/* =============================================================================
+   IP Monitor — Dark Monitoring Theme
+   ============================================================================= */
+
+/* ---------------------------------------------------------------------------
+   CSS Custom Properties
+   --------------------------------------------------------------------------- */
+
+:root {
+  --bg-primary:    #0a0a1a;
+  --bg-card:       #12122a;
+  --bg-card-hover: #181840;
+  --border-card:   #1e1e3a;
+  --border-subtle: #2a2a4a;
+
+  --text-primary:   #e0e0ff;
+  --text-secondary: #8888aa;
+  --text-muted:     #5555777;
+
+  --accent-cyan:   #00d4ff;
+  --accent-orange: #ff6b35;
+  --accent-green:  #00ff88;
+  --accent-red:    #ff3366;
+  --accent-purple: #a855f7;
+
+  --radius:   8px;
+  --radius-sm: 4px;
+  --shadow:    0 2px 16px rgba(0, 0, 0, 0.4);
+  --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.15);
+
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ---------------------------------------------------------------------------
+   Reset & Base
+   --------------------------------------------------------------------------- */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 16px 24px 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-card);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-subtle);
+}
+
+/* ---------------------------------------------------------------------------
+   Connection Overlay
+   --------------------------------------------------------------------------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 26, 0.95);
+  backdrop-filter: blur(8px);
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.overlay-content {
+  text-align: center;
+}
+
+.overlay-content h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-top: 20px;
+  color: var(--text-primary);
+}
+
+.overlay-content p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border-card);
+  border-top-color: var(--accent-cyan);
+  border-radius: 50%;
+  margin: 0 auto;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------------------------------------------------------------------------
+   Header
+   --------------------------------------------------------------------------- */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-card);
+}
+
+.header-title h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--accent-cyan);
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.header-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-left: 4px;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Status indicator dot */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-dot.connected {
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+.status-dot.disconnected {
+  background: var(--accent-red);
+  box-shadow: 0 0 8px var(--accent-red);
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 6px var(--accent-green); }
+  50%      { box-shadow: 0 0 14px var(--accent-green); }
+}
+
+/* ---------------------------------------------------------------------------
+   Summary Cards Row
+   --------------------------------------------------------------------------- */
+
+.summary-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-card {
+  flex: 1;
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.summary-card:hover {
+  border-color: var(--accent-cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+.summary-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.summary-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 500;
+}
+
+.summary-icon {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  opacity: 0.2;
+}
+
+/* Icon shapes via pseudo-elements */
+.icon-download::before,
+.icon-upload::before,
+.icon-network::before,
+.icon-packets::before,
+.icon-clock::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.icon-download::before  { background: var(--accent-cyan); }
+.icon-upload::before    { background: var(--accent-orange); }
+.icon-network::before   { background: var(--accent-green); }
+.icon-packets::before   { background: var(--accent-purple); }
+.icon-clock::before     { background: var(--accent-red); }
+
+/* ---------------------------------------------------------------------------
+   Card Component
+   --------------------------------------------------------------------------- */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-card);
+}
+
+.card-header h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.card-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ---------------------------------------------------------------------------
+   Charts Grid
+   --------------------------------------------------------------------------- */
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.chart-container {
+  position: relative;
+  height: 280px;
+  padding: 12px 16px 8px;
+}
+
+.chart-container-doughnut {
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+}
+
+/* ---------------------------------------------------------------------------
+   World Map
+   --------------------------------------------------------------------------- */
+
+.map-container {
+  height: 350px;
+  background: var(--bg-primary);
+}
+
+/* Override Leaflet control styles for dark theme */
+.leaflet-control-zoom a {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-card) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--bg-card-hover) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow) !important;
+  border: 1px solid var(--border-card) !important;
+}
+
+.leaflet-popup-content {
+  color: var(--text-primary) !important;
+  margin: 10px 14px !important;
+}
+
+.leaflet-popup-content strong {
+  color: var(--accent-cyan) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-card) !important;
+}
+
+.leaflet-container {
+  background: var(--bg-primary) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   IP Table
+   --------------------------------------------------------------------------- */
+
+.table-card {
+  margin-bottom: 16px;
+}
+
+.table-wrapper {
+  max-height: 340px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+#ip-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+#ip-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+#ip-table th {
+  background: #0e0e24;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.8px;
+  padding: 10px 14px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 2px solid var(--border-card);
+  transition: color 0.15s ease;
+}
+
+#ip-table th:hover {
+  color: var(--accent-cyan);
+}
+
+#ip-table th .sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.65rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+#ip-table th.sort-asc .sort-arrow::after  { content: '\25B2'; opacity: 1; }
+#ip-table th.sort-desc .sort-arrow::after { content: '\25BC'; opacity: 1; }
+#ip-table th.sort-asc .sort-arrow,
+#ip-table th.sort-desc .sort-arrow {
+  opacity: 1;
+  color: var(--accent-cyan);
+}
+
+#ip-table td {
+  padding: 8px 14px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-card);
+  color: var(--text-primary);
+}
+
+#ip-table tbody tr {
+  transition: background 0.12s ease;
+}
+
+#ip-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+#ip-table tbody tr:hover {
+  background: rgba(0, 212, 255, 0.06);
+}
+
+.cell-ip {
+  font-family: var(--font-mono);
+  color: var(--accent-cyan) !important;
+  font-weight: 500;
+}
+
+.table-empty {
+  text-align: center !important;
+  padding: 32px 14px !important;
+  color: var(--text-secondary) !important;
+  font-style: italic;
+}
+
+/* ---------------------------------------------------------------------------
+   Footer
+   --------------------------------------------------------------------------- */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 4px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-card);
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive Layout
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  body {
+    padding: 12px 12px 8px;
+  }
+
+  .summary-row {
+    flex-wrap: wrap;
+  }
+
+  .summary-card {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 140px;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-container,
+  .chart-container-doughnut {
+    height: 240px;
+  }
+
+  .map-container {
+    height: 280px;
+  }
+}
+
+@media (max-width: 500px) {
+  .summary-card {
+    flex: 1 1 100%;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .header-status {
+    align-self: flex-end;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Animations
+   --------------------------------------------------------------------------- */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.summary-card,
+.card {
+  animation: fade-in 0.4s ease forwards;
+}
+
+.charts-grid .card:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+/* Chart.js canvas reset */
+canvas {
+  display: block;
+}
